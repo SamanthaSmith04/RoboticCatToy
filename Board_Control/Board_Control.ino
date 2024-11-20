@@ -123,12 +123,30 @@ void loop() {
     reconnect();
   }
   client.loop();
+
+
 }
 
 void update_led_strip() {
-  if (x_pos > 0 && y_pos > 0) {
+  if (x_pos > 0 && y_pos > 0) { // forward
     for (int i = 0; i < NUM_LEDS; i++){
-      
+      light_strip.setPixelColor(0, 255, 0, 255); // green
     }
   }
+  else if (x_pos < 0 && y_pos < 0) { // backward
+    for (int i = 0; i < NUM_LEDS; i++) {
+      light_strip.setPixelColor(255, 0, 0, 255); // red
+    }
+  }
+  else if (x_pos > 0) { // right turn
+    for (int i = 0; i < NUM_LEDS; i++) {
+      light_strip.setPixelColor(0, 0, 255, 255); // blue
+    }
+  }
+  else if (x_pos < 0) { // left turn
+    for (int i = 0; i < NUM_LEDS; i++) {
+      light_strip.setPixelColor(255, 0, 255, 255); // purple
+    }
+  }
+  light_strip.show();
 }
