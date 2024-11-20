@@ -124,6 +124,7 @@ void loop() {
   }
   client.loop();
 
+  update_led_strip(); // this may need a delay
 
 }
 
