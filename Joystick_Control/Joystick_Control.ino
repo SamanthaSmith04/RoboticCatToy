@@ -1,5 +1,19 @@
 #include <Bluepad32.h>
 
+int motor1Pin1 = 27;
+int motor1Pin2 = 26;
+int enable1Pin = 14;
+
+int motor2Pin1 = 25;
+int motor2Pin2 = 19;
+int enable2Pin = 32;
+
+const int freq = 30000;
+const int pwmChannel = 0;
+const int resolution = 8;
+int dutyCycle1;
+int dutyCycle2;
+
 ControllerPtr myControllers[BP32_MAX_GAMEPADS];
 
 // This callback gets called any time a new gamepad is connected.
@@ -92,10 +106,16 @@ void processGamepad(ControllerPtr ctl) {
 
   //== PS4 Square button = 0x0004 ==//
   if (ctl->buttons() == 0x0004) {
-    // code for when square button is pushed
+    dutyCycle1 = 200;
+    digitalWrite(motor1Pin1, LOW);
+    digitalWrite(motor1Pin2, HIGH); 
+    ledcWrite(enable1Pin, dutyCycle1);   
   }
   if (ctl->buttons() != 0x0004) {
-  // code for when square button is released
+    dutyCycle1 = 0;
+    digitalWrite(motor1Pin1, HIGH);
+    digitalWrite(motor1Pin2, LOW); 
+    ledcWrite(enable1Pin, dutyCycle1);   
   }
 
   //== PS4 Triangle button = 0x0008 ==//
@@ -108,10 +128,16 @@ void processGamepad(ControllerPtr ctl) {
 
   //== PS4 Circle button = 0x0002 ==//
   if (ctl->buttons() == 0x0002) {
-    // code for when circle button is pushed
+    dutyCycle2 = 200;
+    digitalWrite(motor2Pin1, LOW);
+    digitalWrite(motor2Pin2, HIGH); 
+    ledcWrite(enable2Pin, dutyCycle2);   
   }
   if (ctl->buttons() != 0x0002) {
-    // code for when circle button is released
+    dutyCycle2 = 0;
+    digitalWrite(motor2Pin1, HIGH);
+    digitalWrite(motor2Pin2, LOW); 
+    ledcWrite(enable2Pin, dutyCycle2);   
   }
 
   //== PS4 Dpad UP button = 0x01 ==//
@@ -230,32 +256,10 @@ void processControllers() {
   }
 }
 
-#include <Adafruit_NeoPixel.h> // Include the Adafruit NeoPixel library
-
-int* motor1Pin1 = 27;
-int* motor1Pin2 = 26;
-int* enable1Pin = 14;
-
-int* motor2Pin1 = 25;
-int* motor2Pin2 = 19;
-int* enable2Pin = 32;
-
-const int freq = 30000;
-const int pwmChannel = 0;
-const int resolution = 8;
-int* dutyCycle1;
-int* dutyCycle2;
 
 void setup() {
   Serial.begin(9600);
 
-  motor1Pin1 = 27;
-  motor1Pin2 = 26;
-  enable1Pin = 14;
-
-  motor2Pin1 = 25;
-  motor2Pin2 = 19;
-  enable2Pin = 32;
   pinMode(motor1Pin1, OUTPUT);
   pinMode(motor1Pin2, OUTPUT);
   pinMode(enable1Pin, OUTPUT);
@@ -291,6 +295,8 @@ void loop() {
   bool dataUpdated = BP32.update();
   if (dataUpdated)
     processControllers();
+
+
 
     // The main loop must have some kind of "yield to lower priority task" event.
     // Otherwise, the watchdog will get triggered.
