@@ -57,7 +57,8 @@ void onDisconnectedController(ControllerPtr ctl) {
 // ========= SEE CONTROLLER VALUES IN SERIAL MONITOR ========= //
 
 void printXY(ControllerPtr ctl){
-  Serial.printf("axis L: %4d, %4d, axis R: %4d, %4d", 
+  Serial.printf("buttons: 0x%04x, axis L: %4d, %4d, axis R: %4d, %4d", 
+  ctl->buttons(),      // bitmask of pressed buttons
   ctl->axisX(),        // (-511 - 512) left X Axis
   ctl->axisY(),        // (-511 - 512) left Y axis
   ctl->axisRX(),       // (-511 - 512) right X axis
@@ -90,8 +91,12 @@ void dumpGamepad(ControllerPtr ctl) {
 
 // ========= GAME CONTROLLER ACTIONS SECTION ========= //
 
-void setMotor(int pin1, int pin2, int pwmChannel, int dutyCycle, bool forward) {
-  if (forward) {
+void setMotor(int pin1, int pin2, int enablePin, int dutyCycle, int dir) {
+  if (dir == 0) {
+    digitalWrite(pin1, LOW);
+    digitalWrite(pin2, LOW);
+  }
+  if (dir == 1) {
     digitalWrite(pin1, LOW);
     digitalWrite(pin2, HIGH);
   }
@@ -99,7 +104,7 @@ void setMotor(int pin1, int pin2, int pwmChannel, int dutyCycle, bool forward) {
     digitalWrite(pin1, HIGH);
     digitalWrite(pin2, LOW);
   }
-  ledcWrite(pwmChannel, dutyCycle);
+  ledcWrite(enablePin, dutyCycle);
 }
 
 void processGamepad(ControllerPtr ctl) {
@@ -115,10 +120,12 @@ void processGamepad(ControllerPtr ctl) {
 
   //== PS4 Square button = 0x0004 ==//
   if (ctl->buttons() == 0x0004) {
-    setMotor(motor1Pin1, motor1Pin2, 1, 200, true);
+    setMotor(motor1Pin1, motor1Pin2, enable1Pin, 200, 1);
+    printf("motor1 forward");
   }
   if (ctl->buttons() != 0x0004) {
-    setMotor(motor1Pin1, motor1Pin2, 0, 0, true);
+    setMotor(motor1Pin1, motor1Pin2, enable2Pin, 200, 0);
+    printf("motor1 off");
   }
 
   //== PS4 Triangle button = 0x0008 ==//
@@ -129,10 +136,10 @@ void processGamepad(ControllerPtr ctl) {
 
   //== PS4 Circle button = 0x0002 ==//
   if (ctl->buttons() == 0x0002) {
-    setMotor(motor2Pin1, motor2Pin2, 1, 200, false);
+    setMotor(motor2Pin1, motor2Pin2, 0, 200, -1);
   }
   if (ctl->buttons() != 0x0002) {
-    setMotor(motor2Pin1, motor2Pin2, 0, 0, false);
+    setMotor(motor2Pin1, motor2Pin2, 0, 200, 0);
   }
 
   //== PS4 Dpad UP button = 0x01 ==//
@@ -233,8 +240,8 @@ void processGamepad(ControllerPtr ctl) {
   if (ctl->axisRY()) {
   // code for when right joystick moves along y-axis
   }
-  dumpGamepad(ctl);
-  //printXY(ctl);
+  //dumpGamepad(ctl);
+  printXY(ctl);
 }
 
 void processControllers() {
@@ -295,7 +302,7 @@ void loop() {
   // This call fetches all the controllers' data.
   // Call this function in your main loop.
   bool dataUpdated = BP32.update();
-  if (dataUpdated)
+  if (dataUpdated){
     processControllers();
 
 
@@ -307,5 +314,8 @@ void loop() {
     // https://stackoverflow.com/questions/66278271/task-watchdog-got-triggered-the-tasks-did-not-reset-the-watchdog-in-time
 
     // vTaskDelay(1);
+    Serial.printf("test");
+  }
+
   delay(150);
 }
