@@ -9,7 +9,8 @@ int motor2Pin2 = 19;
 int enable2Pin = 32;
 
 const int freq = 30000;
-const int pwmChannel = 0;
+const int pwmChannel1 = 0;
+const int pwmChannel2 = 0;
 const int resolution = 8;
 int dutyCycle1;
 int dutyCycle2;
@@ -98,46 +99,34 @@ void processGamepad(ControllerPtr ctl) {
  
   //== PS4 X button = 0x0001 ==//
   if (ctl->buttons() == 0x0001) {
-    // code for when X button is pushed
+    setMotor(motor1Pin1, motor1Pin2, pwmChannel1, 200, false)   
   }
   if (ctl->buttons() != 0x0001) {
-    // code for when X button is released
+    setMotor(motor1Pin1, motor1Pin2, pwmChannel1, 0, false)   
   }
 
   //== PS4 Square button = 0x0004 ==//
   if (ctl->buttons() == 0x0004) {
-    dutyCycle1 = 200;
-    digitalWrite(motor1Pin1, LOW);
-    digitalWrite(motor1Pin2, HIGH); 
-    ledcWrite(enable1Pin, dutyCycle1);   
+    setMotor(motor1Pin1, motor1Pin2, pwmChannel1, 200, true)   
   }
   if (ctl->buttons() != 0x0004) {
-    dutyCycle1 = 0;
-    digitalWrite(motor1Pin1, HIGH);
-    digitalWrite(motor1Pin2, LOW); 
-    ledcWrite(enable1Pin, dutyCycle1);   
+    setMotor(motor1Pin1, motor1Pin2, pwmChannel1, 0, true)   
   }
 
   //== PS4 Triangle button = 0x0008 ==//
   if (ctl->buttons() == 0x0008) {
-    // code for when triangle button is pushed
+    setMotor(motor2Pin1, motor2Pin2, pwmChannel2, 200, false)  
   }
   if (ctl->buttons() != 0x0008) {
-    // code for when triangle button is released
+    setMotor(motor2Pin1, motor2Pin2, pwmChannel2, 0, false)  
   }
 
   //== PS4 Circle button = 0x0002 ==//
   if (ctl->buttons() == 0x0002) {
-    dutyCycle2 = 200;
-    digitalWrite(motor2Pin1, LOW);
-    digitalWrite(motor2Pin2, HIGH); 
-    ledcWrite(enable2Pin, dutyCycle2);   
+    setMotor(motor2Pin1, motor2Pin2, pwmChannel2, 200, false)    
   }
   if (ctl->buttons() != 0x0002) {
-    dutyCycle2 = 0;
-    digitalWrite(motor2Pin1, HIGH);
-    digitalWrite(motor2Pin2, LOW); 
-    ledcWrite(enable2Pin, dutyCycle2);   
+    setMotor(motor2Pin1, motor2Pin2, pwmChannel2, 0, false)    
   }
 
   //== PS4 Dpad UP button = 0x01 ==//
@@ -268,9 +257,10 @@ void setup() {
   pinMode(motor2Pin2, OUTPUT);
   pinMode(enable2Pin, OUTPUT);
 
-  ledcSetup(pwmChannel, freq, resolution);
-  ledcAttachPin(enable1Pin, pwmChannel);
-  ledcAttachPin(enable2Pin, pwmChannel);
+  ledcSetup(pwmChannel1, freq, resolution);
+  ledcAttachPin(enable1Pin, pwmChannel1);
+  ledcSetup(pwmChannel2, freq, resolution);
+  ledcAttachPin(enable2Pin, pwmChannel2);
 
   Serial.printf("Firmware: %s\n", BP32.firmwareVersion());
   const uint8_t* addr = BP32.localBdAddress();
@@ -312,4 +302,16 @@ void loop() {
 
     // vTaskDelay(1);
   delay(150);
+}
+
+void setMotor(int pin1, int pin2, int pwmChannel, int dutyCycle, bool forward) {
+  if (forward) {
+    digitalWrite(pin1, LOW);
+    digitalWrite(pin2, HIGH);
+  }
+  else {
+    digitalWrite(pin1, HIGH);
+    digitalWrite(pin2, LOW);
+  }
+  ledcWrite(pwmChannel, dutyCycle);
 }
