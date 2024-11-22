@@ -43,15 +43,6 @@ void onDisconnectedController(ControllerPtr ctl) {
 
 // ========= SEE CONTROLLER VALUES IN SERIAL MONITOR ========= //
 
-void printXY(ControllerPtr ctl){
-  Serial.printf("axis L: %4d, %4d, axis R: %4d, %4d", 
-  ctl->axisX(),        // (-511 - 512) left X Axis
-  ctl->axisY(),        // (-511 - 512) left Y axis
-  ctl->axisRX(),       // (-511 - 512) right X axis
-  ctl->axisRY()        // (-511 - 512) right Y axis
-  );
-}
-
 void dumpGamepad(ControllerPtr ctl) {
   Serial.printf(
   "idx=%d, dpad: 0x%02x, buttons: 0x%04x, axis L: %4d, %4d, axis R: %4d, %4d, brake: %4d, throttle: %4d, "
@@ -212,8 +203,7 @@ void processGamepad(ControllerPtr ctl) {
   if (ctl->axisRY()) {
   // code for when right joystick moves along y-axis
   }
-  //dumpGamepad(ctl);
-  printXY(ctl);
+  dumpGamepad(ctl);
 }
 
 void processControllers() {
