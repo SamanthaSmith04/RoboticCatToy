@@ -258,13 +258,19 @@ void processControllers() {
 
 
 void setup() {
-  Serial.begin(9600);
+  Serial.begin(115200);
 
   pinMode(motor1Pin1, OUTPUT);
   pinMode(motor1Pin2, OUTPUT);
   pinMode(enable1Pin, OUTPUT);
 
-  ledcAttachChannel(enable1Pin, freq, resolution, pwmChannel);
+  pinMode(motor2Pin1, OUTPUT);
+  pinMode(motor2Pin2, OUTPUT);
+  pinMode(enable2Pin, OUTPUT);
+
+  ledcSetup(pwmChannel, freq, resolution);
+  ledcAttachPin(enable1Pin, pwmChannel);
+  ledcAttachPin(enable2Pin, pwmChannel);
 
   Serial.printf("Firmware: %s\n", BP32.firmwareVersion());
   const uint8_t* addr = BP32.localBdAddress();
