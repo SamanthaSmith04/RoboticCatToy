@@ -1,4 +1,5 @@
 #include <Bluepad32.h>
+#include <Adafruit_NeoPixel.h> // Include the Adafruit NeoPixel library
 
 int motor1Pin1 = 27;
 int motor1Pin2 = 26;
@@ -8,10 +9,19 @@ int motor2Pin1 = 25;
 int motor2Pin2 = 19;
 int enable2Pin = 32;
 
+int ledPin = 33;
+
 const int freq = 30000;
 const int pwmChannel1 = 0;
 const int pwmChannel2 = 0;
 const int resolution = 8;
+
+const int CONTROLLER_MAX = 512;
+
+const int NUM_LEDS = 8;
+
+Adafruit_NeoPixel strip = Adafruit_NeoPixel(NUM_LEDS, ledPin, NEO_GRB + NEO_KHZ800); 
+
 
 ControllerPtr myControllers[BP32_MAX_GAMEPADS];
 
@@ -91,7 +101,6 @@ void dumpGamepad(ControllerPtr ctl) {
 
 // ========= GAME CONTROLLER ACTIONS SECTION ========= //
 
-void setMotor(int pin1, int pin2, int enablePin, int dutyCycle, int dir) {
 void setMotor(int pin1, int pin2, int enablePin, int dutyCycle, int dir) {
   if (dir == 0) { // Stop
     digitalWrite(pin1, LOW);
@@ -207,40 +216,42 @@ void processGamepad(ControllerPtr ctl) {
     // code for when L2 button is released
   }
 
-  //== LEFT JOYSTICK - UP ==//
-  if (ctl->axisY() <= -25) {
-    // code for when left joystick is pushed up
+  // LEFT MOTOR / JOYSTICK DRIVE
+  if (ctl->axisY() > 25 || ctl->axisY() < -25) { // if not in dead zone
+    int dutyCycle = 0;
+    int dir = 0;
+    if (ctl->axisY() > 0) { // forward
+      dutyCycle = map(ctl->axisY(), 0, 512, 0, 200);
+      dir = 1;
     }
-
-  //== LEFT JOYSTICK - DOWN ==//
-  if (ctl->axisY() >= 25) {
-    // code for when left joystick is pushed down
+    else {
+      dutyCycle = map(-1* ctl->axisY(), 0, 512, 0, 200);
+      dir = -1;
+    }
+    setMotor(motor1Pin1, motor1Pin2, enable1Pin, dutyCycle, dir);
+  }
+  else { // is in dead zone
+    setMotor(motor1Pin1, motor1Pin2, enable1Pin, 0, 0);
   }
 
-  //== LEFT JOYSTICK - LEFT ==//
-  if (ctl->axisX() <= -25) {
-    // code for when left joystick is pushed left
+  // Right MOTOR / JOYSTICK DRIVE
+  if (ctl->axisRY() > 25 || ctl->axisRY() < -25) { // if not in dead zone
+    int dutyCycle = 0;
+    int dir = 0;
+    if (ctl->axisRY() > 0) { // forward
+      dutyCycle = map(ctl->axisRY(), 0, 512, 0, 200);
+      dir = 1;
+    }
+    else {
+      dutyCycle = map(-1* ctl->axisRY(), 0, 512, 0, 200);
+      dir = -1;
+    }
+    setMotor(motor2Pin1, motor2Pin2, enable2Pin, dutyCycle, dir);
+  }
+  else { // is in dead zone
+    setMotor(motor2Pin1, motor2Pin2, enable2Pin, 0, 0);
   }
 
-  //== LEFT JOYSTICK - RIGHT ==//
-  if (ctl->axisX() >= 25) {
-    // code for when left joystick is pushed right
-  }
-
-  //== LEFT JOYSTICK DEADZONE ==//
-  if (ctl->axisY() > -25 && ctl->axisY() < 25 && ctl->axisX() > -25 && ctl->axisX() < 25) {
-    // code for when left joystick is at idle
-  }
-
-  //== RIGHT JOYSTICK - X AXIS ==//
-  if (ctl->axisRX()) {
-    // code for when right joystick moves along x-axis
-  }
-
-  //== RIGHT JOYSTICK - Y AXIS ==//
-  if (ctl->axisRY()) {
-  // code for when right joystick moves along y-axis
-  }
   //dumpGamepad(ctl);
   printXY(ctl);
 }
@@ -259,9 +270,20 @@ void processControllers() {
   }
 }
 
+void setLEDStripFromSpeed(int dutyCycle) {
+  float color = map(dutyCycle, 0, 200, 25, 255);
+
+  for (int i = 0; i < NUM_LEDS; i++) {
+    strip.setPixelColor(i, 255, 0, color);
+  }
+  strip.show();
+}
+
 
 void setup() {
   Serial.begin(115200);
+
+  strip.begin();
 
   pinMode(motor1Pin1, OUTPUT);
   pinMode(motor1Pin2, OUTPUT);
