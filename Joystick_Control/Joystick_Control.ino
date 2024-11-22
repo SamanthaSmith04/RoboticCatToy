@@ -97,34 +97,30 @@ void processGamepad(ControllerPtr ctl) {
  
   //== PS4 X button = 0x0001 ==//
   if (ctl->buttons() == 0x0001) {
-    setMotor(motor1Pin1, motor1Pin2, pwmChannel1, 200, false);
   }
   if (ctl->buttons() != 0x0001) {
-    setMotor(motor1Pin1, motor1Pin2, pwmChannel1, 0, false);
   }
 
   //== PS4 Square button = 0x0004 ==//
   if (ctl->buttons() == 0x0004) {
-    setMotor(motor1Pin1, motor1Pin2, pwmChannel1, 200, true);
+    setMotor(motor1Pin1, motor1Pin2, 1, 200, true);
   }
   if (ctl->buttons() != 0x0004) {
-    setMotor(motor1Pin1, motor1Pin2, pwmChannel1, 0, true);
+    setMotor(motor1Pin1, motor1Pin2, 0, 0, true);
   }
 
   //== PS4 Triangle button = 0x0008 ==//
   if (ctl->buttons() == 0x0008) {
-    setMotor(motor2Pin1, motor2Pin2, pwmChannel2, 200, false);
   }
   if (ctl->buttons() != 0x0008) {
-    setMotor(motor2Pin1, motor2Pin2, pwmChannel2, 0, false);
   }
 
   //== PS4 Circle button = 0x0002 ==//
   if (ctl->buttons() == 0x0002) {
-    setMotor(motor2Pin1, motor2Pin2, pwmChannel2, 200, false);
+    setMotor(motor2Pin1, motor2Pin2, 1, 200, false);
   }
   if (ctl->buttons() != 0x0002) {
-    setMotor(motor2Pin1, motor2Pin2, pwmChannel2, 0, false);
+    setMotor(motor2Pin1, motor2Pin2, 0, 0, false);
   }
 
   //== PS4 Dpad UP button = 0x01 ==//
@@ -225,8 +221,8 @@ void processGamepad(ControllerPtr ctl) {
   if (ctl->axisRY()) {
   // code for when right joystick moves along y-axis
   }
-  //dumpGamepad(ctl);
-  printXY(ctl);
+  dumpGamepad(ctl);
+  //printXY(ctl);
 }
 
 void processControllers() {
