@@ -90,6 +90,18 @@ void dumpGamepad(ControllerPtr ctl) {
 
 // ========= GAME CONTROLLER ACTIONS SECTION ========= //
 
+void setMotor(int pin1, int pin2, int pwmChannel, int dutyCycle, bool forward) {
+  if (forward) {
+    digitalWrite(pin1, LOW);
+    digitalWrite(pin2, HIGH);
+  }
+  else {
+    digitalWrite(pin1, HIGH);
+    digitalWrite(pin2, LOW);
+  }
+  ledcWrite(pwmChannel, dutyCycle);
+}
+
 void processGamepad(ControllerPtr ctl) {
   // There are different ways to query whether a button is pressed.
   // By query each button individually:
@@ -300,16 +312,4 @@ void loop() {
 
     // vTaskDelay(1);
   delay(150);
-}
-
-void setMotor(int pin1, int pin2, int pwmChannel, int dutyCycle, bool forward) {
-  if (forward) {
-    digitalWrite(pin1, LOW);
-    digitalWrite(pin2, HIGH);
-  }
-  else {
-    digitalWrite(pin1, HIGH);
-    digitalWrite(pin2, LOW);
-  }
-  ledcWrite(pwmChannel, dutyCycle);
 }
