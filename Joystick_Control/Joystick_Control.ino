@@ -92,19 +92,20 @@ void dumpGamepad(ControllerPtr ctl) {
 // ========= GAME CONTROLLER ACTIONS SECTION ========= //
 
 void setMotor(int pin1, int pin2, int enablePin, int dutyCycle, int dir) {
-  if (dir == 0) {
+void setMotor(int pin1, int pin2, int enablePin, int dutyCycle, int dir) {
+  if (dir == 0) { // Stop
     digitalWrite(pin1, LOW);
     digitalWrite(pin2, LOW);
-  }
-  if (dir == 1) {
+    analogWrite(enablePin, 0); // Stop the motor
+  } else if (dir == 1) { // Move forward
     digitalWrite(pin1, LOW);
     digitalWrite(pin2, HIGH);
-  }
-  else {
+    analogWrite(enablePin, dutyCycle); // Set speed
+  } else { // Move backward
     digitalWrite(pin1, HIGH);
     digitalWrite(pin2, LOW);
+    analogWrite(enablePin, dutyCycle); // Set speed
   }
-  ledcWrite(enablePin, dutyCycle);
 }
 
 void processGamepad(ControllerPtr ctl) {
@@ -270,10 +271,6 @@ void setup() {
   pinMode(motor2Pin2, OUTPUT);
   pinMode(enable2Pin, OUTPUT);
 
-  ledcSetup(pwmChannel1, freq, resolution);
-  ledcAttachPin(enable1Pin, pwmChannel1);
-  ledcSetup(pwmChannel2, freq, resolution);
-  ledcAttachPin(enable2Pin, pwmChannel2);
 
   Serial.printf("Firmware: %s\n", BP32.firmwareVersion());
   const uint8_t* addr = BP32.localBdAddress();
