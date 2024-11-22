@@ -12,8 +12,6 @@ const int freq = 30000;
 const int pwmChannel1 = 0;
 const int pwmChannel2 = 0;
 const int resolution = 8;
-int dutyCycle1;
-int dutyCycle2;
 
 ControllerPtr myControllers[BP32_MAX_GAMEPADS];
 
@@ -99,34 +97,34 @@ void processGamepad(ControllerPtr ctl) {
  
   //== PS4 X button = 0x0001 ==//
   if (ctl->buttons() == 0x0001) {
-    setMotor(motor1Pin1, motor1Pin2, pwmChannel1, 200, false)   
+    setMotor(motor1Pin1, motor1Pin2, pwmChannel1, 200, false);
   }
   if (ctl->buttons() != 0x0001) {
-    setMotor(motor1Pin1, motor1Pin2, pwmChannel1, 0, false)   
+    setMotor(motor1Pin1, motor1Pin2, pwmChannel1, 0, false);
   }
 
   //== PS4 Square button = 0x0004 ==//
   if (ctl->buttons() == 0x0004) {
-    setMotor(motor1Pin1, motor1Pin2, pwmChannel1, 200, true)   
+    setMotor(motor1Pin1, motor1Pin2, pwmChannel1, 200, true);
   }
   if (ctl->buttons() != 0x0004) {
-    setMotor(motor1Pin1, motor1Pin2, pwmChannel1, 0, true)   
+    setMotor(motor1Pin1, motor1Pin2, pwmChannel1, 0, true);
   }
 
   //== PS4 Triangle button = 0x0008 ==//
   if (ctl->buttons() == 0x0008) {
-    setMotor(motor2Pin1, motor2Pin2, pwmChannel2, 200, false)  
+    setMotor(motor2Pin1, motor2Pin2, pwmChannel2, 200, false);
   }
   if (ctl->buttons() != 0x0008) {
-    setMotor(motor2Pin1, motor2Pin2, pwmChannel2, 0, false)  
+    setMotor(motor2Pin1, motor2Pin2, pwmChannel2, 0, false);
   }
 
   //== PS4 Circle button = 0x0002 ==//
   if (ctl->buttons() == 0x0002) {
-    setMotor(motor2Pin1, motor2Pin2, pwmChannel2, 200, false)    
+    setMotor(motor2Pin1, motor2Pin2, pwmChannel2, 200, false);
   }
   if (ctl->buttons() != 0x0002) {
-    setMotor(motor2Pin1, motor2Pin2, pwmChannel2, 0, false)    
+    setMotor(motor2Pin1, motor2Pin2, pwmChannel2, 0, false);
   }
 
   //== PS4 Dpad UP button = 0x01 ==//
