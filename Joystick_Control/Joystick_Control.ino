@@ -22,8 +22,8 @@ int motor1Pin1 = 27;
 int motor1Pin2 = 26;
 int enable1Pin = 14;
 
-int motor2Pin1 = 12;
-int motor2Pin2 = 19;
+int motor2Pin1 = 13;
+int motor2Pin2 = 33;
 int enable2Pin = 32;
 
 int ledPin = 19;
@@ -168,12 +168,8 @@ void processGamepad(ControllerPtr ctl) {
 
   //== Xbox X button = 0x0004 ==//
   if (ctl->buttons() == 0x0004) {
-    setMotor(motor1Pin1, motor1Pin2, enable1Pin, 200, 1);
-    printf("motor1 forward");
   }
   if (ctl->buttons() != 0x0004) {
-    setMotor(motor1Pin1, motor1Pin2, enable2Pin, 200, 0);
-    printf("motor1 off");
   }
 
   //== Xbox Y button = 0x0008 ==//
@@ -184,10 +180,12 @@ void processGamepad(ControllerPtr ctl) {
 
   //== Xbox B button = 0x0002 ==//
   if (ctl->buttons() == 0x0002) {
-    setMotor(motor2Pin1, motor2Pin2, 0, 200, -1);
+    Serial.println("audio2 playing");
+
+    if (mp3->isRunning()) mp3->stop();
+    mp3->begin(audio1, out);
   }
   if (ctl->buttons() != 0x0002) {
-    setMotor(motor2Pin1, motor2Pin2, 0, 200, 0);
   }
 
   //== PS4 Dpad UP button = 0x01 ==//
@@ -196,7 +194,7 @@ void processGamepad(ControllerPtr ctl) {
 
     mp3->begin(audio1, out);
 
-    Serial.print("audio1 playing");
+    Serial.println("audio1 playing");
   }
   if (ctl->buttons() != 0x01) {
     // code for when dpad up button is released
@@ -206,9 +204,9 @@ void processGamepad(ControllerPtr ctl) {
   if (ctl->buttons() == 0x02) {
     mp3->stop();
 
-    mp3->begin(audio2, out);
+    mp3->begin(audio1, out);
 
-    Serial.print("audio2 playing");
+    Serial.println("audio2 playing");
   }
   if (ctl->buttons() != 0x02) {
     // code for when dpad down button is released
@@ -218,9 +216,9 @@ void processGamepad(ControllerPtr ctl) {
   if (ctl->buttons() == 0x08) {
     mp3->stop();
 
-    mp3->begin(audio3, out);
+    mp3->begin(audio1, out);
 
-    Serial.print("audio3 playing");
+    Serial.println("audio3 playing");
   }
   if (ctl->buttons() != 0x08) {
     // code for when dpad left button is released
@@ -230,9 +228,9 @@ void processGamepad(ControllerPtr ctl) {
   if (ctl->buttons() == 0x04) {
     mp3->stop();
 
-    mp3->begin(audio4, out);
+    mp3->begin(audio1, out);
 
-    Serial.print("audio4 playing");
+    Serial.println("audio4 playing");
   }
   if (ctl->buttons() != 0x04) {
     // code for when dpad right button is released
@@ -303,11 +301,11 @@ void processGamepad(ControllerPtr ctl) {
   }
 
   //dumpGamepad(ctl);
-  printXY(ctl);
+  //printXY(ctl);
 }
 
 void processControllers() {
-  Serial.println("process controller is being called");
+  //Serial.println("process controller is being called");
   for (auto myController : myControllers) {
     if (myController && myController->isConnected() && myController->hasData()) {
       if (myController->isGamepad()) {
@@ -384,11 +382,11 @@ void setup() {
 
   audio1 = new AudioFileSourceSD_MMC("/audio1.mp3");
 
-  audio2 = new AudioFileSourceSD_MMC("/audio2.mp3");
+  //audio2 = new AudioFileSourceSD_MMC("/audio2.mp3");
 
-  audio3 = new AudioFileSourceSD_MMC("/audio3.mp3");
+  //audio3 = new AudioFileSourceSD_MMC("/audio3.mp3");
 
-  audio4 = new AudioFileSourceSD_MMC("/audio4.mp3");
+  //audio4 = new AudioFileSourceSD_MMC("/audio4.mp3");
 }
 
 // Arduino loop function. Runs in CPU 1.
@@ -401,7 +399,9 @@ void loop() {
     setLEDStripFromSpeed(0, dutyCycle1);
     setLEDStripFromSpeed(1, dutyCycle2);
 
-
+    if (mp3->isRunning()) {
+      if (!mp3->loop()) mp3->stop();
+    } 
 
 
     // The main loop must have some kind of "yield to lower priority task" event.
