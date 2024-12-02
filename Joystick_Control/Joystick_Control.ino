@@ -1,6 +1,8 @@
 #include <Bluepad32.h>
-#include <Adafruit_NeoPixel.h> // Include the Adafruit NeoPixel library
+#include <Adafruit_NeoPixel.h>  // Include the Adafruit NeoPixel library
 #include <ESP32Servo.h>
+
+// audio libraries
 #include "AudioFileSourceSD_MMC.h"
 #include "AudioOutputI2S.h"
 #include "AudioGeneratorMP3.h"
@@ -9,24 +11,26 @@
 
 // Define the servo and the pin it is connected to
 Servo myServo;
-const int servoPin = 25;
 
 // Define the minimum and maximum pulse widths for the servo
-const int minPulseWidth = 500; // 0.5 ms
-const int maxPulseWidth = 2500; // 2.5 ms
+const int minPulseWidth = 500;   // 0.5 ms
+const int maxPulseWidth = 2500;  // 2.5 ms
+
+const int servoPin = 18;
 
 int motor1Pin1 = 27;
 int motor1Pin2 = 26;
 int enable1Pin = 14;
 
-int motor2Pin1 = 25;
+int motor2Pin1 = 12;
 int motor2Pin2 = 19;
 int enable2Pin = 32;
 
+int ledPin = 19;
+
+
 int dutyCycle1 = 0;
 int dutyCycle2 = 0;
-
-int ledPin = 33;
 
 const int freq = 30000;
 const int pwmChannel1 = 0;
@@ -39,7 +43,18 @@ const int JOY_THRESHOLD = 60;
 
 const int NUM_LEDS = 8;
 
-Adafruit_NeoPixel strip = Adafruit_NeoPixel(NUM_LEDS, ledPin, NEO_GRB + NEO_KHZ800); 
+Adafruit_NeoPixel strip = Adafruit_NeoPixel(NUM_LEDS, ledPin, NEO_GRB + NEO_KHZ800);
+
+// Declare pointers for the MP3 generator, file source, and output.
+AudioGeneratorMP3 *mp3;
+AudioFileSourceSD_MMC *audio1;
+AudioFileSourceSD_MMC *audio2;
+AudioFileSourceSD_MMC *audio3;
+AudioFileSourceSD_MMC *audio4;
+
+AudioOutputI2S *out;
+
+
 
 
 ControllerPtr myControllers[BP32_MAX_GAMEPADS];
@@ -78,61 +93,61 @@ void onDisconnectedController(ControllerPtr ctl) {
     }
   }
 
-    if (!foundController) {
-      Serial.println("CALLBACK: Controller disconnected, but not found in myControllers");
-    }
+  if (!foundController) {
+    Serial.println("CALLBACK: Controller disconnected, but not found in myControllers");
+  }
 }
 
 // ========= SEE CONTROLLER VALUES IN SERIAL MONITOR ========= //
 
-void printXY(ControllerPtr ctl){
-  Serial.printf("buttons: 0x%04x, axis L: %4d, %4d, axis R: %4d, %4d", 
-  ctl->buttons(),      // bitmask of pressed buttons
-  ctl->axisX(),        // (-511 - 512) left X Axis
-  ctl->axisY(),        // (-511 - 512) left Y axis
-  ctl->axisRX(),       // (-511 - 512) right X axis
-  ctl->axisRY()        // (-511 - 512) right Y axis
+void printXY(ControllerPtr ctl) {
+  Serial.printf("buttons: 0x%04x, axis L: %4d, %4d, axis R: %4d, %4d",
+                ctl->buttons(),  // bitmask of pressed buttons
+                ctl->axisX(),    // (-511 - 512) left X Axis
+                ctl->axisY(),    // (-511 - 512) left Y axis
+                ctl->axisRX(),   // (-511 - 512) right X axis
+                ctl->axisRY()    // (-511 - 512) right Y axis
   );
 }
 
 void dumpGamepad(ControllerPtr ctl) {
   Serial.printf(
-  "idx=%d, dpad: 0x%02x, buttons: 0x%04x, axis L: %4d, %4d, axis R: %4d, %4d, brake: %4d, throttle: %4d, "
-  "misc: 0x%02x, gyro x:%6d y:%6d z:%6d, accel x:%6d y:%6d z:%6d\n",
-  ctl->index(),        // Controller Index
-  ctl->dpad(),         // D-pad
-  ctl->buttons(),      // bitmask of pressed buttons
-  ctl->axisX(),        // (-511 - 512) left X Axis
-  ctl->axisY(),        // (-511 - 512) left Y axis
-  ctl->axisRX(),       // (-511 - 512) right X axis
-  ctl->axisRY(),       // (-511 - 512) right Y axis
-  ctl->brake(),        // (0 - 1023): brake button
-  ctl->throttle(),     // (0 - 1023): throttle (AKA gas) button
-  ctl->miscButtons(),  // bitmask of pressed "misc" buttons
-  ctl->gyroX(),        // Gyro X
-  ctl->gyroY(),        // Gyro Y
-  ctl->gyroZ(),        // Gyro Z
-  ctl->accelX(),       // Accelerometer X
-  ctl->accelY(),       // Accelerometer Y
-  ctl->accelZ()        // Accelerometer Z
+    "idx=%d, dpad: 0x%02x, buttons: 0x%04x, axis L: %4d, %4d, axis R: %4d, %4d, brake: %4d, throttle: %4d, "
+    "misc: 0x%02x, gyro x:%6d y:%6d z:%6d, accel x:%6d y:%6d z:%6d\n",
+    ctl->index(),        // Controller Index
+    ctl->dpad(),         // D-pad
+    ctl->buttons(),      // bitmask of pressed buttons
+    ctl->axisX(),        // (-511 - 512) left X Axis
+    ctl->axisY(),        // (-511 - 512) left Y axis
+    ctl->axisRX(),       // (-511 - 512) right X axis
+    ctl->axisRY(),       // (-511 - 512) right Y axis
+    ctl->brake(),        // (0 - 1023): brake button
+    ctl->throttle(),     // (0 - 1023): throttle (AKA gas) button
+    ctl->miscButtons(),  // bitmask of pressed "misc" buttons
+    ctl->gyroX(),        // Gyro X
+    ctl->gyroY(),        // Gyro Y
+    ctl->gyroZ(),        // Gyro Z
+    ctl->accelX(),       // Accelerometer X
+    ctl->accelY(),       // Accelerometer Y
+    ctl->accelZ()        // Accelerometer Z
   );
 }
 
 // ========= GAME CONTROLLER ACTIONS SECTION ========= //
 
 void setMotor(int pin1, int pin2, int enablePin, int dutyCycle, int dir) {
-  if (dir == 0) { // Stop
+  if (dir == 0) {  // Stop
     digitalWrite(pin1, LOW);
     digitalWrite(pin2, LOW);
-    analogWrite(enablePin, 0); // Stop the motor
-  } else if (dir == 1) { // Move forward
+    analogWrite(enablePin, 0);  // Stop the motor
+  } else if (dir == 1) {        // Move forward
     digitalWrite(pin1, LOW);
     digitalWrite(pin2, HIGH);
-    analogWrite(enablePin, dutyCycle); // Set speed
-  } else { // Move backward
+    analogWrite(enablePin, dutyCycle);  // Set speed
+  } else {                              // Move backward
     digitalWrite(pin1, HIGH);
     digitalWrite(pin2, LOW);
-    analogWrite(enablePin, dutyCycle); // Set speed
+    analogWrite(enablePin, dutyCycle);  // Set speed
   }
 }
 
@@ -140,10 +155,10 @@ void processGamepad(ControllerPtr ctl) {
   // There are different ways to query whether a button is pressed.
   // By query each button individually:
   //  a(), b(), x(), y(), l1(), etc...
- 
+
   //== XBox A button = 0x0001 ==//
   if (ctl->buttons() == 0x0001) {
-    for (int i = 0; i < 3; i++){
+    for (int i = 0; i < 3; i++) {
       // Rotate the servo from 0 to 180 degrees
       for (int angle = 0; angle <= 180; angle++) {
         int pulseWidth = map(angle, 0, 180, minPulseWidth, maxPulseWidth);
@@ -188,7 +203,11 @@ void processGamepad(ControllerPtr ctl) {
 
   //== PS4 Dpad UP button = 0x01 ==//
   if (ctl->buttons() == 0x01) {
-    // code for when dpad up button is pushed
+    mp3->stop();
+
+    mp3->begin(audio1, out);
+
+    Serial.print("audio1 playing");
   }
   if (ctl->buttons() != 0x01) {
     // code for when dpad up button is released
@@ -196,7 +215,11 @@ void processGamepad(ControllerPtr ctl) {
 
   //==PS4 Dpad DOWN button = 0x02==//
   if (ctl->buttons() == 0x02) {
-    // code for when dpad down button is pushed
+    mp3->stop();
+
+    mp3->begin(audio2, out);
+
+    Serial.print("audio2 playing");
   }
   if (ctl->buttons() != 0x02) {
     // code for when dpad down button is released
@@ -204,7 +227,11 @@ void processGamepad(ControllerPtr ctl) {
 
   //== PS4 Dpad LEFT button = 0x08 ==//
   if (ctl->buttons() == 0x08) {
-    // code for when dpad left button is pushed
+    mp3->stop();
+
+    mp3->begin(audio3, out);
+
+    Serial.print("audio3 playing");
   }
   if (ctl->buttons() != 0x08) {
     // code for when dpad left button is released
@@ -212,7 +239,11 @@ void processGamepad(ControllerPtr ctl) {
 
   //== PS4 Dpad RIGHT button = 0x04 ==//
   if (ctl->buttons() == 0x04) {
-    // code for when dpad right button is pushed
+    mp3->stop();
+
+    mp3->begin(audio4, out);
+
+    Serial.print("audio4 playing");
   }
   if (ctl->buttons() != 0x04) {
     // code for when dpad right button is released
@@ -251,37 +282,33 @@ void processGamepad(ControllerPtr ctl) {
   }
 
   // LEFT MOTOR / JOYSTICK DRIVE
-  if (ctl->axisY() > JOY_THRESHOLD || ctl->axisY() < -JOY_THRESHOLD) { // if not in dead zone
+  if (ctl->axisY() > JOY_THRESHOLD || ctl->axisY() < -JOY_THRESHOLD) {  // if not in dead zone
     int dir = 0;
-    if (ctl->axisY() > 0) { // forward
+    if (ctl->axisY() > 0) {  // forward
       dutyCycle1 = map(ctl->axisY(), 0, 512, 0, 200);
       dir = 1;
-    }
-    else {
-      dutyCycle1 = map(-1* ctl->axisY(), 0, 512, 0, 200);
+    } else {
+      dutyCycle1 = map(-1 * ctl->axisY(), 0, 512, 0, 200);
       dir = -1;
     }
     setMotor(motor1Pin1, motor1Pin2, enable1Pin, dutyCycle1, dir);
-  }
-  else { // is in dead zone
+  } else {  // is in dead zone
     dutyCycle1 = 0;
     setMotor(motor1Pin1, motor1Pin2, enable1Pin, 0, 0);
   }
 
   // Right MOTOR / JOYSTICK DRIVE
-  if (ctl->axisRY() > JOY_THRESHOLD || ctl->axisRY() < -JOY_THRESHOLD) { // if not in dead zone
+  if (ctl->axisRY() > JOY_THRESHOLD || ctl->axisRY() < -JOY_THRESHOLD) {  // if not in dead zone
     int dir = 0;
-    if (ctl->axisRY() > 0) { // forward
+    if (ctl->axisRY() > 0) {  // forward
       dutyCycle2 = map(ctl->axisRY(), 0, 512, 0, 200);
       dir = 1;
-    }
-    else {
-      dutyCycle2 = map(-1* ctl->axisRY(), 0, 512, 0, 200);
+    } else {
+      dutyCycle2 = map(-1 * ctl->axisRY(), 0, 512, 0, 200);
       dir = -1;
     }
     setMotor(motor2Pin1, motor2Pin2, enable2Pin, dutyCycle2, dir);
-  }
-  else { // is in dead zone
+  } else {  // is in dead zone
     dutyCycle2 = 0;
     setMotor(motor2Pin1, motor2Pin2, enable2Pin, 0, 0);
   }
@@ -296,8 +323,7 @@ void processControllers() {
     if (myController && myController->isConnected() && myController->hasData()) {
       if (myController->isGamepad()) {
         processGamepad(myController);
-      }
-      else {
+      } else {
         Serial.println("Unsupported controller");
       }
     }
@@ -305,17 +331,17 @@ void processControllers() {
 }
 
 void setLEDStripFromSpeed(int section, int dutyCycle) {
-  float brightness = map(dutyCycle, 0, 200, JOY_THRESHOLD, 255);
+  float brightness = map(dutyCycle, 0, 200, 0, 255);
   // Determine the range of LEDs to control for the section
   int start = section * (NUM_LEDS / 2);
   int end = start + (NUM_LEDS / 2);
 
   for (int i = start; i < end; i++) {
     // Set the color of the LED based on brightness
-    strip.setPixelColor(i, strip.Color(0, brightness, 0)); // Example: Red intensity
+    strip.setPixelColor(i, strip.Color(0, brightness, 0));  // Example: Red intensity
   }
-  
-  strip.show(); // Apply the changes
+
+  strip.show();  // Apply the changes
 }
 
 void setup() {
@@ -333,7 +359,7 @@ void setup() {
 
 
   Serial.printf("Firmware: %s\n", BP32.firmwareVersion());
-  const uint8_t* addr = BP32.localBdAddress();
+  const uint8_t *addr = BP32.localBdAddress();
   Serial.printf("BD Addr: %2X:%2X:%2X:%2X:%2X:%2X\n", addr[0], addr[1], addr[2], addr[3], addr[4], addr[5]);
 
   // Setup the Bluepad32 callbacks
@@ -356,7 +382,24 @@ void setup() {
   myServo.attach(servoPin, minPulseWidth, maxPulseWidth);
 
   // Set the PWM frequency for the servo
-  myServo.setPeriodHertz(50); // Standard 50Hz servo
+  myServo.setPeriodHertz(50);  // Standard 50Hz servo
+
+  // Initialize the SD card. If it fails, print an error message.
+  if (!SD_MMC.begin()) {
+    Serial.println("SD card mount failed!");
+  }
+
+  out = new AudioOutputI2S(0, 1);
+  out->SetOutputModeMono(true);
+  mp3 = new AudioGeneratorMP3();
+
+  audio1 = new AudioFileSourceSD_MMC("/audio1.mp3");
+
+  audio2 = new AudioFileSourceSD_MMC("/audio2.mp3");
+
+  audio3 = new AudioFileSourceSD_MMC("/audio3.mp3");
+
+  audio4 = new AudioFileSourceSD_MMC("/audio4.mp3");
 }
 
 // Arduino loop function. Runs in CPU 1.
@@ -364,7 +407,7 @@ void loop() {
   // This call fetches all the controllers' data.
   // Call this function in your main loop.
   bool dataUpdated = BP32.update();
-  if (dataUpdated){
+  if (dataUpdated) {
     processControllers();
     setLEDStripFromSpeed(0, dutyCycle1);
     setLEDStripFromSpeed(1, dutyCycle2);
@@ -379,7 +422,6 @@ void loop() {
     // https://stackoverflow.com/questions/66278271/task-watchdog-got-triggered-the-tasks-did-not-reset-the-watchdog-in-time
 
     // vTaskDelay(1);
-    Serial.printf("test");
   }
 
   delay(150);
