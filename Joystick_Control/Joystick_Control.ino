@@ -1,5 +1,14 @@
 #include <Bluepad32.h>
 #include <Adafruit_NeoPixel.h> // Include the Adafruit NeoPixel library
+#include <ESP32Servo.h>
+
+// Define the servo and the pin it is connected to
+Servo myServo;
+const int servoPin = 25;
+
+// Define the minimum and maximum pulse widths for the servo
+const int minPulseWidth = 500; // 0.5 ms
+const int maxPulseWidth = 2500; // 2.5 ms
 
 int motor1Pin1 = 27;
 int motor1Pin2 = 26;
@@ -127,13 +136,28 @@ void processGamepad(ControllerPtr ctl) {
   // By query each button individually:
   //  a(), b(), x(), y(), l1(), etc...
  
-  //== PS4 X button = 0x0001 ==//
+  //== XBox A button = 0x0001 ==//
   if (ctl->buttons() == 0x0001) {
+    for (int i = 0; i < 3; i++){
+      // Rotate the servo from 0 to 180 degrees
+      for (int angle = 0; angle <= 180; angle++) {
+        int pulseWidth = map(angle, 0, 180, minPulseWidth, maxPulseWidth);
+        myServo.writeMicroseconds(pulseWidth);
+        delay(15);
+      }
+
+      // Rotate the servo from 180 to 0 degrees
+      for (int angle = 180; angle >= 0; angle--) {
+        int pulseWidth = map(angle, 0, 180, minPulseWidth, maxPulseWidth);
+        myServo.writeMicroseconds(pulseWidth);
+        delay(15);
+      }
+    }
   }
   if (ctl->buttons() != 0x0001) {
   }
 
-  //== PS4 Square button = 0x0004 ==//
+  //== Xbox X button = 0x0004 ==//
   if (ctl->buttons() == 0x0004) {
     setMotor(motor1Pin1, motor1Pin2, enable1Pin, 200, 1);
     printf("motor1 forward");
@@ -143,13 +167,13 @@ void processGamepad(ControllerPtr ctl) {
     printf("motor1 off");
   }
 
-  //== PS4 Triangle button = 0x0008 ==//
+  //== Xbox Y button = 0x0008 ==//
   if (ctl->buttons() == 0x0008) {
   }
   if (ctl->buttons() != 0x0008) {
   }
 
-  //== PS4 Circle button = 0x0002 ==//
+  //== Xbox B button = 0x0002 ==//
   if (ctl->buttons() == 0x0002) {
     setMotor(motor2Pin1, motor2Pin2, 0, 200, -1);
   }
@@ -328,6 +352,11 @@ void setup() {
   // - Second one, which is a "virtual device", is a mouse.
   // By default, it is disabled.
   BP32.enableVirtualDevice(false);
+
+  myServo.attach(servoPin, minPulseWidth, maxPulseWidth);
+
+  // Set the PWM frequency for the servo
+  myServo.setPeriodHertz(50); // Standard 50Hz servo
 }
 
 // Arduino loop function. Runs in CPU 1.
