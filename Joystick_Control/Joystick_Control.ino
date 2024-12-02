@@ -9,6 +9,9 @@ int motor2Pin1 = 25;
 int motor2Pin2 = 19;
 int enable2Pin = 32;
 
+int dutyCycle1 = 0;
+int dutyCycle2 = 0;
+
 int ledPin = 33;
 
 const int freq = 30000;
@@ -17,6 +20,8 @@ const int pwmChannel2 = 0;
 const int resolution = 8;
 
 const int CONTROLLER_MAX = 512;
+
+const int JOY_THRESHOLD = 60;
 
 const int NUM_LEDS = 8;
 
@@ -217,38 +222,38 @@ void processGamepad(ControllerPtr ctl) {
   }
 
   // LEFT MOTOR / JOYSTICK DRIVE
-  if (ctl->axisY() > 25 || ctl->axisY() < -25) { // if not in dead zone
-    int dutyCycle = 0;
+  if (ctl->axisY() > JOY_THRESHOLD || ctl->axisY() < -JOY_THRESHOLD) { // if not in dead zone
     int dir = 0;
     if (ctl->axisY() > 0) { // forward
-      dutyCycle = map(ctl->axisY(), 0, 512, 0, 200);
+      dutyCycle1 = map(ctl->axisY(), 0, 512, 0, 200);
       dir = 1;
     }
     else {
-      dutyCycle = map(-1* ctl->axisY(), 0, 512, 0, 200);
+      dutyCycle1 = map(-1* ctl->axisY(), 0, 512, 0, 200);
       dir = -1;
     }
-    setMotor(motor1Pin1, motor1Pin2, enable1Pin, dutyCycle, dir);
+    setMotor(motor1Pin1, motor1Pin2, enable1Pin, dutyCycle1, dir);
   }
   else { // is in dead zone
+    dutyCycle1 = 0;
     setMotor(motor1Pin1, motor1Pin2, enable1Pin, 0, 0);
   }
 
   // Right MOTOR / JOYSTICK DRIVE
-  if (ctl->axisRY() > 25 || ctl->axisRY() < -25) { // if not in dead zone
-    int dutyCycle = 0;
+  if (ctl->axisRY() > JOY_THRESHOLD || ctl->axisRY() < -JOY_THRESHOLD) { // if not in dead zone
     int dir = 0;
     if (ctl->axisRY() > 0) { // forward
-      dutyCycle = map(ctl->axisRY(), 0, 512, 0, 200);
+      dutyCycle2 = map(ctl->axisRY(), 0, 512, 0, 200);
       dir = 1;
     }
     else {
-      dutyCycle = map(-1* ctl->axisRY(), 0, 512, 0, 200);
+      dutyCycle2 = map(-1* ctl->axisRY(), 0, 512, 0, 200);
       dir = -1;
     }
-    setMotor(motor2Pin1, motor2Pin2, enable2Pin, dutyCycle, dir);
+    setMotor(motor2Pin1, motor2Pin2, enable2Pin, dutyCycle2, dir);
   }
   else { // is in dead zone
+    dutyCycle2 = 0;
     setMotor(motor2Pin1, motor2Pin2, enable2Pin, 0, 0);
   }
 
@@ -270,10 +275,19 @@ void processControllers() {
   }
 }
 
-void setLEDStripFromSpeed(int dutyCycle) {
-  float color = map(dutyCycle, 0, 200, 25, 255);
-
-  for (int i = 0; i < NUM_LEDS; i++) {
+void setLEDStripFromSpeed(int section, int dutyCycle) {
+  float color = map(dutyCycle, 0, 200, JOY_THRESHOLD, 255);
+  int max = 0;
+  int num = 0;
+  if (section == 0) {
+    max = NUM_LEDS;
+    num = 5;
+  }
+  else {
+    num = 0;
+    max = 5;
+  }
+  for (int i = num; i < max; i++) {
     strip.setPixelColor(i, 255, 0, color);
   }
   strip.show();
@@ -323,6 +337,9 @@ void loop() {
   bool dataUpdated = BP32.update();
   if (dataUpdated){
     processControllers();
+    setLEDStripFromSpeed(0, dutyCycle1);
+    setLEDStripFromSpeed(1, dutyCycle2);
+
 
 
 
