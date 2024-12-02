@@ -1,6 +1,11 @@
 #include <Bluepad32.h>
 #include <Adafruit_NeoPixel.h> // Include the Adafruit NeoPixel library
 #include <ESP32Servo.h>
+#include "AudioFileSourceSD_MMC.h"
+#include "AudioOutputI2S.h"
+#include "AudioGeneratorMP3.h"
+#include "SD_MMC.h"
+#include "FS.h"
 
 // Define the servo and the pin it is connected to
 Servo myServo;
@@ -300,23 +305,18 @@ void processControllers() {
 }
 
 void setLEDStripFromSpeed(int section, int dutyCycle) {
-  float color = map(dutyCycle, 0, 200, JOY_THRESHOLD, 255);
-  int max = 0;
-  int num = 0;
-  if (section == 0) {
-    max = NUM_LEDS;
-    num = 5;
-  }
-  else {
-    num = 0;
-    max = 5;
-  }
-  for (int i = num; i < max; i++) {
-    strip.setPixelColor(i, 255, 0, color);
-  }
-  strip.show();
-}
+  float brightness = map(dutyCycle, 0, 200, JOY_THRESHOLD, 255);
+  // Determine the range of LEDs to control for the section
+  int start = section * (NUM_LEDS / 2);
+  int end = start + (NUM_LEDS / 2);
 
+  for (int i = start; i < end; i++) {
+    // Set the color of the LED based on brightness
+    strip.setPixelColor(i, strip.Color(0, brightness, 0)); // Example: Red intensity
+  }
+  
+  strip.show(); // Apply the changes
+}
 
 void setup() {
   Serial.begin(115200);
