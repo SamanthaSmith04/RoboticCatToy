@@ -192,11 +192,7 @@ void processGamepad(ControllerPtr ctl) {
 
   //== PS4 Dpad UP button = 0x01 ==//
   if (ctl->buttons() == 0x01) {
-    mp3->stop();
-
-    mp3->begin(audio1, out);
-
-    Serial.println("audio1 playing");
+    
   }
   if (ctl->buttons() != 0x01) {
     // code for when dpad up button is released
@@ -204,11 +200,6 @@ void processGamepad(ControllerPtr ctl) {
 
   //==PS4 Dpad DOWN button = 0x02==//
   if (ctl->buttons() == 0x02) {
-    mp3->stop();
-
-    mp3->begin(audio1, out);
-
-    Serial.println("audio2 playing");
   }
   if (ctl->buttons() != 0x02) {
     // code for when dpad down button is released
@@ -216,11 +207,6 @@ void processGamepad(ControllerPtr ctl) {
 
   //== PS4 Dpad LEFT button = 0x08 ==//
   if (ctl->buttons() == 0x08) {
-    mp3->stop();
-
-    mp3->begin(audio1, out);
-
-    Serial.println("audio3 playing");
   }
   if (ctl->buttons() != 0x08) {
     // code for when dpad left button is released
@@ -228,11 +214,6 @@ void processGamepad(ControllerPtr ctl) {
 
   //== PS4 Dpad RIGHT button = 0x04 ==//
   if (ctl->buttons() == 0x04) {
-    mp3->stop();
-
-    mp3->begin(audio1, out);
-
-    Serial.println("audio4 playing");
   }
   if (ctl->buttons() != 0x04) {
     // code for when dpad right button is released
@@ -389,6 +370,8 @@ void setup() {
   //audio3 = new AudioFileSourceSD_MMC("/audio3.mp3");
 
   //audio4 = new AudioFileSourceSD_MMC("/audio4.mp3");
+
+  mp3->begin(audio1, out);
 }
 
 // Arduino loop function. Runs in CPU 1.
