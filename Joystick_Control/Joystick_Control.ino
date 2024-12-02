@@ -42,6 +42,7 @@ const int CONTROLLER_MAX = 512;
 const int JOY_THRESHOLD = 60;
 
 const int NUM_LEDS = 8;
+int loopCount = 0;
 
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(NUM_LEDS, ledPin, NEO_GRB + NEO_KHZ800);
 
@@ -158,21 +159,7 @@ void processGamepad(ControllerPtr ctl) {
 
   //== XBox A button = 0x0001 ==//
   if (ctl->buttons() == 0x0001) {
-    for (int i = 0; i < 3; i++) {
-      // Rotate the servo from 0 to 180 degrees
-      for (int angle = 0; angle <= 180; angle++) {
-        int pulseWidth = map(angle, 0, 180, minPulseWidth, maxPulseWidth);
-        myServo.writeMicroseconds(pulseWidth);
-        delay(15);
-      }
-
-      // Rotate the servo from 180 to 0 degrees
-      for (int angle = 180; angle >= 0; angle--) {
-        int pulseWidth = map(angle, 0, 180, minPulseWidth, maxPulseWidth);
-        myServo.writeMicroseconds(pulseWidth);
-        delay(15);
-      }
-    }
+    loopCount++;
   }
   if (ctl->buttons() != 0x0001) {
   }
@@ -422,6 +409,28 @@ void loop() {
     // https://stackoverflow.com/questions/66278271/task-watchdog-got-triggered-the-tasks-did-not-reset-the-watchdog-in-time
 
     // vTaskDelay(1);
+
+    if(loopCount > 0){
+      // Rotate the servo from 0 to 90 degrees
+      for (int angle = 0; angle <= 90; angle++) {
+        int pulseWidth = map(angle, 0, 180, minPulseWidth, maxPulseWidth);
+        myServo.writeMicroseconds(pulseWidth);
+        delay(15);
+      }
+
+      // Rotate the servo from 90 to 0 degrees
+      for (int angle = 90; angle >= 0; angle--) {
+        int pulseWidth = map(angle, 0, 180, minPulseWidth, maxPulseWidth);
+        myServo.writeMicroseconds(pulseWidth);
+        delay(15);
+      }
+
+      loopCount++;
+
+      if (loopCount > 3){
+        loopCount = 0;
+      }
+    }
   }
 
   delay(150);
