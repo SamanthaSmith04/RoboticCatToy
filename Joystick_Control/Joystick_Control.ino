@@ -161,7 +161,9 @@ void processGamepad(ControllerPtr ctl) {
 
   //== XBox A button = 0x0001 ==//
   if (ctl->buttons() == 0x0001) {
-    loopCount++;
+    if (loopCount == 0){
+      loopCount++;
+    }
   }
   if (ctl->buttons() != 0x0001) {
   }
