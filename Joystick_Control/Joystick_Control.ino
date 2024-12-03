@@ -51,9 +51,6 @@ Adafruit_NeoPixel strip = Adafruit_NeoPixel(NUM_LEDS, ledPin, NEO_GRB + NEO_KHZ8
 // Declare pointers for the MP3 generator, file source, and output.
 AudioGeneratorMP3 *mp3;
 AudioFileSourceSD_MMC *audio1;
-AudioFileSourceSD_MMC *audio2;
-AudioFileSourceSD_MMC *audio3;
-AudioFileSourceSD_MMC *audio4;
 
 AudioOutputI2S *out;
 
@@ -185,18 +182,14 @@ void processGamepad(ControllerPtr ctl) {
     Serial.println("audio2 playing");
 
     if (mp3->isRunning()) mp3->stop();
-    mp3->begin(audio1, out);
+    mp3->begin(new AudioFileSourceSD_MMC("/audio1.mp3"), out);
   }
   if (ctl->buttons() != 0x0002) {
   }
 
   //== PS4 Dpad UP button = 0x01 ==//
   if (ctl->buttons() == 0x01) {
-    mp3->stop();
-
-    mp3->begin(audio1, out);
-
-    Serial.println("audio1 playing");
+    
   }
   if (ctl->buttons() != 0x01) {
     // code for when dpad up button is released
@@ -204,11 +197,6 @@ void processGamepad(ControllerPtr ctl) {
 
   //==PS4 Dpad DOWN button = 0x02==//
   if (ctl->buttons() == 0x02) {
-    mp3->stop();
-
-    mp3->begin(audio1, out);
-
-    Serial.println("audio2 playing");
   }
   if (ctl->buttons() != 0x02) {
     // code for when dpad down button is released
@@ -216,11 +204,6 @@ void processGamepad(ControllerPtr ctl) {
 
   //== PS4 Dpad LEFT button = 0x08 ==//
   if (ctl->buttons() == 0x08) {
-    mp3->stop();
-
-    mp3->begin(audio1, out);
-
-    Serial.println("audio3 playing");
   }
   if (ctl->buttons() != 0x08) {
     // code for when dpad left button is released
@@ -228,11 +211,6 @@ void processGamepad(ControllerPtr ctl) {
 
   //== PS4 Dpad RIGHT button = 0x04 ==//
   if (ctl->buttons() == 0x04) {
-    mp3->stop();
-
-    mp3->begin(audio1, out);
-
-    Serial.println("audio4 playing");
   }
   if (ctl->buttons() != 0x04) {
     // code for when dpad right button is released
@@ -293,7 +271,7 @@ void processGamepad(ControllerPtr ctl) {
       dutyCycle2 = map(ctl->axisRY(), 0, 512, 0, 200);
       dir = 1;
     } else {
-      dutyCycle2 = map(-1 * ctl->axisRY(), 0, 512, 0, 200);
+      dutyCycle2 = map(abs(ctl->axisRY()), 0, 512, 0, 200);
       dir = -1;
     }
     setMotor(motor2Pin1, motor2Pin2, enable2Pin, dutyCycle2, dir);
@@ -335,6 +313,7 @@ void setLEDStripFromSpeed(int section, int dutyCycle) {
 
 void setup() {
   Serial.begin(115200);
+  delay(1000);
 
   strip.begin();
 
@@ -377,18 +356,20 @@ void setup() {
   if (!SD_MMC.begin()) {
     Serial.println("SD card mount failed!");
   }
+  audio1 = new AudioFileSourceSD_MMC("/audio1.mp3");
 
   out = new AudioOutputI2S(0, 1);
   out->SetOutputModeMono(true);
   mp3 = new AudioGeneratorMP3();
 
-  audio1 = new AudioFileSourceSD_MMC("/audio1.mp3");
 
   //audio2 = new AudioFileSourceSD_MMC("/audio2.mp3");
 
   //audio3 = new AudioFileSourceSD_MMC("/audio3.mp3");
 
   //audio4 = new AudioFileSourceSD_MMC("/audio4.mp3");
+
+  //mp3->begin(audio1, out);
 }
 
 // Arduino loop function. Runs in CPU 1.
@@ -401,10 +382,6 @@ void loop() {
     setLEDStripFromSpeed(0, dutyCycle1);
     setLEDStripFromSpeed(1, dutyCycle2);
 
-    if (mp3->isRunning()) {
-      if (!mp3->loop()) mp3->stop();
-    } 
-
 
     // The main loop must have some kind of "yield to lower priority task" event.
     // Otherwise, the watchdog will get triggered.
@@ -414,22 +391,31 @@ void loop() {
 
     // vTaskDelay(1);
 
-    if(loopCount > 0){
-      angle += 2 * direction;
-      int pulseWidth = map(angle, 0, 180, minPulseWidth, maxPulseWidth);
-      myServo.writeMicroseconds(pulseWidth);
-      delay(15);
+  }
 
-      if (angle > 90 || angle < 3){
-        direction = direction * -1; 
-        loopCount++;
-      }
+  if(loopCount > 0){
+    angle += 1 * direction;
+    int pulseWidth = map(angle, 0, 180, minPulseWidth, maxPulseWidth);
+    myServo.writeMicroseconds(pulseWidth);
+    //delay(15);
 
-      if (loopCount > 3){
-        loopCount = 0;
-      }
+    if (angle > 90 || angle < 3){
+      direction = direction * -1; 
+      loopCount++;
+    }
+
+    if (loopCount > 3){
+      loopCount = 0;
     }
   }
 
-  delay(150);
+  if (mp3->isRunning()) {
+    if (!mp3->loop()) mp3->stop();
+  } 
+  else {
+    //Serial.println("MP3 done");
+    delay(150);
+  }
+
+  //delay(150);
 }
