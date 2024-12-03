@@ -154,7 +154,7 @@ void processGamepad(ControllerPtr ctl) {
     myServo.writeMicroseconds(pulseWidth);
     delay(15);
 
-    if (angle > 90 || angle < 3) {
+    if (angle > 90 || angle < 1) {
       Serial.println("Direction is changing");
       direction = direction * -1;
       loopCount++;
