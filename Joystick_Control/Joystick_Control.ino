@@ -19,10 +19,10 @@ const int maxPulseWidth = 2500;  // 2.5 ms
 const int servoPin = 18;
 
 int motor1Pin1 = 27;
-int motor1Pin2 = 26;
+int motor1Pin2 = 5;
 int enable1Pin = 14;
 
-int motor2Pin1 = 13;
+int motor2Pin1 = 21;
 int motor2Pin2 = 33;
 int enable2Pin = 32;
 
@@ -180,9 +180,8 @@ void processGamepad(ControllerPtr ctl) {
   //== Xbox B button = 0x0002 ==//
   if (ctl->buttons() == 0x0002) {
     Serial.println("audio2 playing");
-
-    if (mp3->isRunning()) mp3->stop();
-    mp3->begin(new AudioFileSourceSD_MMC("/audio1.mp3"), out);
+    audio1 = new AudioFileSourceSD_MMC("/audio1.mp3");
+    mp3->begin(audio1, out);
   }
   if (ctl->buttons() != 0x0002) {
   }
@@ -255,7 +254,7 @@ void processGamepad(ControllerPtr ctl) {
       dutyCycle1 = map(ctl->axisY(), 0, 512, 0, 200);
       dir = 1;
     } else {
-      dutyCycle1 = map(-1 * ctl->axisY(), 0, 512, 0, 200);
+      dutyCycle1 = map(abs(ctl->axisY()), 0, 512, 0, 200);
       dir = -1;
     }
     setMotor(motor1Pin1, motor1Pin2, enable1Pin, dutyCycle1, dir);
@@ -418,7 +417,6 @@ void loop() {
   } 
   else {
     //Serial.println("MP3 done");
-    delay(150);
   }
 
   //delay(150);
