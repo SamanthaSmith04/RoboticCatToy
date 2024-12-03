@@ -415,7 +415,7 @@ void loop() {
     // vTaskDelay(1);
 
     if(loopCount > 0){
-      angle += 1 * direction;
+      angle += 2 * direction;
       int pulseWidth = map(angle, 0, 180, minPulseWidth, maxPulseWidth);
       myServo.writeMicroseconds(pulseWidth);
       delay(15);
