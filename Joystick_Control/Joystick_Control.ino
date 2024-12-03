@@ -2,13 +2,6 @@
 #include <Adafruit_NeoPixel.h>  // Include the Adafruit NeoPixel library
 #include <ESP32Servo.h>
 
-// audio libraries
-#include "AudioFileSourceSD_MMC.h"
-#include "AudioOutputI2S.h"
-#include "AudioGeneratorMP3.h"
-#include "SD_MMC.h"
-#include "FS.h"
-
 // Define the servo and the pin it is connected to
 Servo myServo;
 
@@ -47,12 +40,6 @@ int angle = 0;
 int direction = 1;
 
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(NUM_LEDS, ledPin, NEO_GRB + NEO_KHZ800);
-
-// Declare pointers for the MP3 generator, file source, and output.
-AudioGeneratorMP3 *mp3;
-AudioFileSourceSD_MMC *audio1;
-
-AudioOutputI2S *out;
 
 
 
@@ -158,7 +145,7 @@ void processGamepad(ControllerPtr ctl) {
 
   //== XBox A button = 0x0001 ==//
   if (ctl->buttons() == 0x0001) {
-    if (loopCount == 0){
+    if (loopCount == 0) {
       loopCount++;
     }
   }
@@ -179,16 +166,13 @@ void processGamepad(ControllerPtr ctl) {
 
   //== Xbox B button = 0x0002 ==//
   if (ctl->buttons() == 0x0002) {
-    Serial.println("audio2 playing");
-    audio1 = new AudioFileSourceSD_MMC("/audio1.mp3");
-    mp3->begin(audio1, out);
+    
   }
   if (ctl->buttons() != 0x0002) {
   }
 
   //== PS4 Dpad UP button = 0x01 ==//
   if (ctl->buttons() == 0x01) {
-    
   }
   if (ctl->buttons() != 0x01) {
     // code for when dpad up button is released
@@ -350,25 +334,6 @@ void setup() {
 
   // Set the PWM frequency for the servo
   myServo.setPeriodHertz(50);  // Standard 50Hz servo
-
-  // Initialize the SD card. If it fails, print an error message.
-  if (!SD_MMC.begin()) {
-    Serial.println("SD card mount failed!");
-  }
-  audio1 = new AudioFileSourceSD_MMC("/audio1.mp3");
-
-  out = new AudioOutputI2S(0, 1);
-  out->SetOutputModeMono(true);
-  mp3 = new AudioGeneratorMP3();
-
-
-  //audio2 = new AudioFileSourceSD_MMC("/audio2.mp3");
-
-  //audio3 = new AudioFileSourceSD_MMC("/audio3.mp3");
-
-  //audio4 = new AudioFileSourceSD_MMC("/audio4.mp3");
-
-  //mp3->begin(audio1, out);
 }
 
 // Arduino loop function. Runs in CPU 1.
@@ -389,10 +354,9 @@ void loop() {
     // https://stackoverflow.com/questions/66278271/task-watchdog-got-triggered-the-tasks-did-not-reset-the-watchdog-in-time
 
     // vTaskDelay(1);
-
   }
 
-  if(loopCount > 0){
+  if (loopCount > 0) {
     Serial.println("servo code is being reached");
     angle += 1 * direction;
     Serial.println("Angle: " + angle);
@@ -400,23 +364,16 @@ void loop() {
     myServo.writeMicroseconds(pulseWidth);
     //delay(15);
 
-    if (angle > 90 || angle < 3){
+    if (angle > 90 || angle < 3) {
       Serial.println("Direction is changing");
-      direction = direction * -1; 
+      direction = direction * -1;
       loopCount++;
     }
 
-    if (loopCount > 3){
+    if (loopCount > 3) {
       Serial.println("Reset is happening");
       loopCount = 0;
     }
-  }
-
-  if (mp3->isRunning()) {
-    if (!mp3->loop()) mp3->stop();
-  } 
-  else {
-    //Serial.println("MP3 done");
   }
 
   //delay(150);
