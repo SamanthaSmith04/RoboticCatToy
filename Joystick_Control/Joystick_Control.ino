@@ -394,17 +394,21 @@ void loop() {
   }
 
   if(loopCount > 0){
+    Serial.println("servo code is being reached");
     angle += 1 * direction;
+    Serial.println("Angle: " + angle);
     int pulseWidth = map(angle, 0, 180, minPulseWidth, maxPulseWidth);
     myServo.writeMicroseconds(pulseWidth);
     //delay(15);
 
     if (angle > 90 || angle < 3){
+      Serial.println("Direction is changing");
       direction = direction * -1; 
       loopCount++;
     }
 
     if (loopCount > 3){
+      Serial.println("Reset is happening");
       loopCount = 0;
     }
   }
