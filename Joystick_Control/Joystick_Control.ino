@@ -145,7 +145,16 @@ void processGamepad(ControllerPtr ctl) {
 
   //== XBox A button = 0x0001 ==//
   if (ctl->buttons() == 0x0001) {
-    if (loopCount == 0) {
+
+    angle += 1 * direction;
+    Serial.println("Angle: %d", angle);
+    int pulseWidth = map(angle, 0, 180, minPulseWidth, maxPulseWidth);
+    myServo.writeMicroseconds(pulseWidth);
+    delay(15);
+
+    if (angle > 90 || angle < 3) {
+      Serial.println("Direction is changing");
+      direction = direction * -1;
       loopCount++;
     }
   }
@@ -356,25 +365,25 @@ void loop() {
     // vTaskDelay(1);
   }
 
-  if (loopCount > 0) {
-    Serial.println("servo code is being reached");
-    angle += 1 * direction;
-    Serial.println("Angle: " + angle);
-    int pulseWidth = map(angle, 0, 180, minPulseWidth, maxPulseWidth);
-    myServo.writeMicroseconds(pulseWidth);
-    //delay(15);
+  // if (loopCount > 0) {
+  //   Serial.println("servo code is being reached");
+  //   angle += 1 * direction;
+  //   Serial.println("Angle: %d", angle);
+  //   int pulseWidth = map(angle, 0, 180, minPulseWidth, maxPulseWidth);
+  //   myServo.writeMicroseconds(pulseWidth);
+  //   //delay(15);
 
-    if (angle > 90 || angle < 3) {
-      Serial.println("Direction is changing");
-      direction = direction * -1;
-      loopCount++;
-    }
+  //   if (angle > 90 || angle < 3) {
+  //     Serial.println("Direction is changing");
+  //     direction = direction * -1;
+  //     loopCount++;
+  //   }
 
-    if (loopCount > 3) {
-      Serial.println("Reset is happening");
-      loopCount = 0;
-    }
-  }
+  //   if (loopCount > 3) {
+  //     Serial.println("Reset is happening");
+  //     loopCount = 0;
+  //   }
+  // }
 
   //delay(150);
 }
