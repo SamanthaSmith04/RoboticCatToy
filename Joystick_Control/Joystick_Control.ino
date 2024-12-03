@@ -19,6 +19,8 @@ int motor2Pin1 = 21;
 int motor2Pin2 = 33;
 int enable2Pin = 32;
 
+const int buzzerPin = 25;
+
 int ledPin = 19;
 
 
@@ -175,9 +177,13 @@ void processGamepad(ControllerPtr ctl) {
 
   //== Xbox B button = 0x0002 ==//
   if (ctl->buttons() == 0x0002) {
-    
+
+    digitalWrite(buzzerPin, HIGH);
+
   }
   if (ctl->buttons() != 0x0002) {
+
+    digitalWrite(buzzerPin, LOW);
   }
 
   //== PS4 Dpad UP button = 0x01 ==//
@@ -317,6 +323,8 @@ void setup() {
   pinMode(motor2Pin2, OUTPUT);
   pinMode(enable2Pin, OUTPUT);
 
+  pinMode(buzzerPin, OUTPUT);
+
 
   Serial.printf("Firmware: %s\n", BP32.firmwareVersion());
   const uint8_t *addr = BP32.localBdAddress();
@@ -385,5 +393,5 @@ void loop() {
   //   }
   // }
 
-  //delay(150);
+  delay(150);
 }
