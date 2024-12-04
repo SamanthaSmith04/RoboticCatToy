@@ -1,6 +1,8 @@
 #include <Bluepad32.h>
 #include <Adafruit_NeoPixel.h>  // Include the Adafruit NeoPixel library
 #include <ESP32Servo.h>
+#include <Arduino.h>
+#include <esp32-hal-ledc.h>
 
 // Define the servo and the pin it is connected to
 Servo myServo;
@@ -43,9 +45,6 @@ int direction = 1;
 
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(NUM_LEDS, ledPin, NEO_GRB + NEO_KHZ800);
 
-
-
-
 ControllerPtr myControllers[BP32_MAX_GAMEPADS];
 
 // This callback gets called any time a new gamepad is connected.
@@ -68,6 +67,13 @@ void onConnectedController(ControllerPtr ctl) {
   if (!foundEmptySlot) {
     Serial.println("CALLBACK: Controller connected, but could not found empty slot");
   }
+
+  for (int i = 0; i < 8; i++) {
+    // Set the color of the LED based on brightness
+    strip.setPixelColor(i, strip.Color(255, 0, 0));  // Example: Red intensity
+  }
+
+  strip.show();  // Apply the changes
 }
 
 void onDisconnectedController(ControllerPtr ctl) {
@@ -97,6 +103,7 @@ void printXY(ControllerPtr ctl) {
                 ctl->axisRX(),   // (-511 - 512) right X axis
                 ctl->axisRY()    // (-511 - 512) right Y axis
   );
+  Serial.println();
 }
 
 void dumpGamepad(ControllerPtr ctl) {
@@ -147,18 +154,10 @@ void processGamepad(ControllerPtr ctl) {
 
   //== XBox A button = 0x0001 ==//
   if (ctl->buttons() == 0x0001) {
-
-    angle += 1 * direction;
-    Serial.println("Angle:");
-    Serial.println(angle);
-    int pulseWidth = map(angle, 0, 180, minPulseWidth, maxPulseWidth);
-    myServo.writeMicroseconds(pulseWidth);
-    delay(15);
-
-    if (angle > 90 || angle < 1) {
-      Serial.println("Direction is changing");
-      direction = direction * -1;
+     if (loopCount == 0){
+      Serial.println("A was pushed");
       loopCount++;
+      Serial.println(loopCount);
     }
   }
   if (ctl->buttons() != 0x0001) {
@@ -226,6 +225,9 @@ void processGamepad(ControllerPtr ctl) {
   //== PS4 R2 trigger button = 0x0080 ==//
   if (ctl->buttons() == 0x0080) {
     // code for when R2 button is pushed
+    if (loopCount == 0){
+      loopCount++;
+    }
   }
   if (ctl->buttons() != 0x0080) {
     // code for when R2 button is released
@@ -242,9 +244,11 @@ void processGamepad(ControllerPtr ctl) {
   //== PS4 L2 trigger button = 0x0040 ==//
   if (ctl->buttons() == 0x0040) {
     // code for when L2 button is pushed
+    digitalWrite(buzzerPin, HIGH);
   }
   if (ctl->buttons() != 0x0040) {
     // code for when L2 button is released
+    digitalWrite(buzzerPin, LOW);
   }
 
   // LEFT MOTOR / JOYSTICK DRIVE
@@ -280,7 +284,7 @@ void processGamepad(ControllerPtr ctl) {
   }
 
   //dumpGamepad(ctl);
-  //printXY(ctl);
+  printXY(ctl);
 }
 
 void processControllers() {
@@ -352,6 +356,7 @@ void setup() {
 
   // Set the PWM frequency for the servo
   myServo.setPeriodHertz(50);  // Standard 50Hz servo
+  
 }
 
 // Arduino loop function. Runs in CPU 1.
@@ -374,25 +379,30 @@ void loop() {
     // vTaskDelay(1);
   }
 
-  // if (loopCount > 0) {
-  //   Serial.println("servo code is being reached");
-  //   angle += 1 * direction;
-  //   Serial.println("Angle: %d", angle);
-  //   int pulseWidth = map(angle, 0, 180, minPulseWidth, maxPulseWidth);
-  //   myServo.writeMicroseconds(pulseWidth);
-  //   //delay(15);
+  if (loopCount > 0) {
+    Serial.println("servo code is being reached");
+    angle += 1 * direction;
+    Serial.println("Angle: ");
+    Serial.println(angle);
+    int pulseWidth = map(angle, 0, 180, minPulseWidth, maxPulseWidth);
+    myServo.writeMicroseconds(pulseWidth);
+    delay(15);
 
-  //   if (angle > 90 || angle < 3) {
-  //     Serial.println("Direction is changing");
-  //     direction = direction * -1;
-  //     loopCount++;
-  //   }
+    if (angle > 90 || angle < 1) {
+      Serial.println("Direction is changing");
+      direction = direction * -1;
+      loopCount++;
+    }
 
-  //   if (loopCount > 3) {
-  //     Serial.println("Reset is happening");
-  //     loopCount = 0;
-  //   }
-  // }
+    if (loopCount > 5) {
+      Serial.println("Reset is happening");
+      loopCount = 0;
+    }
+  }
 
-  delay(150);
 }
+
+
+
+
+
